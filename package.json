@@ -1,0 +1,32 @@
+{
+  "name": "github-issue-creator",
+  "version": "1.0.0",
+  "description": "Chrome extension to automate GitHub issue creation with network and console capture",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch --mode development",
+    "build": "node scripts/generate-icons.cjs && tsc && vite build && node scripts/post-build.mjs",
+    "preview": "vite preview",
+    "type-check": "tsc --noEmit",
+    "generate-icons": "node scripts/generate-icons.cjs"
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "axios": "^1.6.2",
+    "zustand": "^4.4.7"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.258",
+    "@types/react": "^18.2.43",
+    "@types/react-dom": "^18.2.17",
+    "@vitejs/plugin-react": "^4.2.1",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.8",
+    "tailwindcss": "^3.4.0",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.32"
+  },
+  "author": "",
+  "license": "ISC"
+}

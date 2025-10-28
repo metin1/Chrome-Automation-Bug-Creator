@@ -79,3 +79,89 @@ export interface ChromeMessage {
   [key: string]: any;
 }
 
+// Phase 2 Features
+export interface Screenshot {
+  id: string;
+  data: string; // base64
+  timestamp: number;
+  width: number;
+  height: number;
+}
+
+export interface SessionRecording {
+  id: string;
+  frames: Screenshot[];
+  startTime: number;
+  endTime: number;
+  duration: number;
+}
+
+export interface StorageCapture {
+  localStorage: Record<string, string>;
+  sessionStorage: Record<string, string>;
+  timestamp: number;
+}
+
+export interface WebSocketMessage {
+  id: string;
+  url: string;
+  type: 'sent' | 'received';
+  data: string;
+  timestamp: number;
+  size: number;
+}
+
+export interface StateCapture {
+  type: 'redux' | 'vuex' | 'pinia' | 'zustand' | 'jotai';
+  state: Record<string, any>;
+  timestamp: number;
+}
+
+export interface IssueTemplate {
+  id: string;
+  name: string;
+  description: string;
+  body: string;
+  labels: string[];
+  assignees?: string[];
+}
+
+export interface DuplicateIssueMatch {
+  id: number;
+  title: string;
+  body: string;
+  similarity: number; // 0-1
+  url: string;
+  state: 'open' | 'closed';
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TeamMember {
+  id: number;
+  login: string;
+  avatar_url: string;
+  name?: string;
+  email?: string;
+}
+
+export interface ProjectColumn {
+  id: number;
+  name: string;
+  project_id: number;
+}
+
+export interface ExportData {
+  format: 'json' | 'har';
+  timestamp: number;
+  data: string;
+}
+
+export interface Phase2CapturedData extends CapturedData {
+  screenshots?: Screenshot[];
+  sessionRecording?: SessionRecording;
+  storage?: StorageCapture;
+  webSocketMessages?: WebSocketMessage[];
+  stateCapture?: StateCapture;
+}
+

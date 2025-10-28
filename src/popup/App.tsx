@@ -4,10 +4,17 @@ import { MainTab } from './components/MainTab';
 import { NetworkTab } from './components/NetworkTab';
 import { ConsoleTab } from './components/ConsoleTab';
 import { SettingsTab } from './components/SettingsTab';
+import { ScreenshotTab } from './components/ScreenshotTab';
+import { RecordingTab } from './components/RecordingTab';
+import { DuplicateDetectionTab } from './components/DuplicateDetectionTab';
+import { TemplatesTab } from './components/TemplatesTab';
+import { DataExportTab } from './components/DataExportTab';
+import { TeamMentionsTab } from './components/TeamMentionsTab';
+import { AdvancedDataTab } from './components/AdvancedDataTab';
 import { storage } from '../utils/storage';
 import './styles.css';
 
-type Tab = 'main' | 'network' | 'console' | 'settings';
+type Tab = 'main' | 'network' | 'console' | 'settings' | 'screenshots' | 'recording' | 'duplicates' | 'templates' | 'export' | 'team' | 'data';
 
 export const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<Tab>('main');
@@ -79,6 +86,13 @@ export const App: React.FC = () => {
     { id: 'main', label: 'Create Issue', icon: '📝' },
     { id: 'network', label: 'Network', icon: '🌐' },
     { id: 'console', label: 'Console', icon: '🔍' },
+    { id: 'screenshots', label: 'Screenshots', icon: '📸' },
+    { id: 'recording', label: 'Recording', icon: '🎬' },
+    { id: 'duplicates', label: 'Duplicates', icon: '🔄' },
+    { id: 'templates', label: 'Templates', icon: '📋' },
+    { id: 'export', label: 'Export', icon: '📊' },
+    { id: 'team', label: 'Team', icon: '👥' },
+    { id: 'data', label: 'Data', icon: '💾' },
     { id: 'settings', label: 'Settings', icon: '⚙️' },
   ];
 
@@ -141,6 +155,13 @@ export const App: React.FC = () => {
               {activeTab === 'main' && <MainTab />}
               {activeTab === 'network' && <NetworkTab />}
               {activeTab === 'console' && <ConsoleTab />}
+              {activeTab === 'screenshots' && <ScreenshotTab />}
+              {activeTab === 'recording' && <RecordingTab />}
+              {activeTab === 'duplicates' && <DuplicateDetectionTab />}
+              {activeTab === 'templates' && <TemplatesTab />}
+              {activeTab === 'export' && <DataExportTab />}
+              {activeTab === 'team' && <TeamMentionsTab />}
+              {activeTab === 'data' && <AdvancedDataTab />}
               {activeTab === 'settings' && <SettingsTab />}
             </>
           )}

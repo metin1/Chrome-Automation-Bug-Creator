@@ -90,5 +90,25 @@ export class GitHubAPI {
     );
     return response.data;
   }
+
+  async getRepositoryIssues(owner: string, repo: string, state: 'open' | 'closed' | 'all' = 'open') {
+    const response = await axios.get(
+      `${GITHUB_API}/repos/${owner}/${repo}/issues`,
+      {
+        headers: this.headers,
+        params: { state, per_page: 100 }
+      }
+    );
+    return response.data;
+  }
+
+  async request(endpoint: string, options: any = {}) {
+    const url = endpoint.startsWith('http') ? endpoint : `${GITHUB_API}${endpoint.startsWith('/') ? endpoint : '/' + endpoint}`;
+    const response = await axios.get(url, {
+      headers: { ...this.headers, ...options.headers },
+      ...options,
+    });
+    return response.data;
+  }
 }
 

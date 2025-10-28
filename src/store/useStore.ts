@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { AppSettings, CapturedData } from '../types';
+import type { AppSettings, CapturedData, Screenshot, SessionRecording, StateCapture, StorageCapture, WebSocketMessage, IssueTemplate, DuplicateIssueMatch } from '../types';
 
 interface AppState {
   settings: AppSettings;
@@ -16,7 +16,22 @@ interface AppState {
   issueLabels: string[];
   selectedRepo: string;
   additionalLogs: string;
+
+  // Phase 2 & 3 Features
+  screenshots: Screenshot[];
+  sessionRecording: SessionRecording | null;
+  isRecording: boolean;
+  capturedStates: StateCapture[];
+  capturedStorage: StorageCapture | null;
+  webSocketMessages: WebSocketMessage[];
+  issueTemplates: IssueTemplate[];
+  duplicateMatches: DuplicateIssueMatch[];
+  selectedAssignees: string[];
+  selectedTeamMembers: string[];
   
+  // Speech-to-Text (New Feature)
+  speechTranscript: string;
+  isSpeechListening: boolean;
   // Actions
   setSettings: (settings: Partial<AppSettings>) => void;
   setCapturedData: (data: CapturedData) => void;
@@ -32,6 +47,25 @@ interface AppState {
   setSelectedRepo: (repo: string) => void;
   setAdditionalLogs: (logs: string) => void;
   clearIssueData: () => void;
+
+  // Phase 2 & 3 Actions
+  addScreenshot: (screenshot: Screenshot) => void;
+  removeScreenshot: (id: string) => void;
+  clearScreenshots: () => void;
+  setSessionRecording: (recording: SessionRecording | null) => void;
+  setIsRecording: (recording: boolean) => void;
+  setCapturedStates: (states: StateCapture[]) => void;
+  setCapturedStorage: (storage: StorageCapture | null) => void;
+  addWebSocketMessage: (message: WebSocketMessage) => void;
+  clearWebSocketMessages: () => void;
+  setIssueTemplates: (templates: IssueTemplate[]) => void;
+  setDuplicateMatches: (matches: DuplicateIssueMatch[]) => void;
+  setSelectedAssignees: (assignees: string[]) => void;
+  setSelectedTeamMembers: (members: string[]) => void;
+
+  // Speech-to-Text Actions (New Feature)
+  setSpeechTranscript: (transcript: string) => void;
+  setIsSpeechListening: (listening: boolean) => void;
 }
 
 export const useStore = create<AppState>()(
@@ -52,6 +86,22 @@ export const useStore = create<AppState>()(
       issueLabels: [],
       selectedRepo: '',
       additionalLogs: '',
+
+      // Phase 2 & 3 state
+      screenshots: [],
+      sessionRecording: null,
+      isRecording: false,
+      capturedStates: [],
+      capturedStorage: null,
+      webSocketMessages: [],
+      issueTemplates: [],
+      duplicateMatches: [],
+      selectedAssignees: [],
+      selectedTeamMembers: [],
+
+      // Speech-to-Text state
+      speechTranscript: '',
+      isSpeechListening: false,
 
       setSettings: (newSettings) =>
         set((state) => ({
@@ -104,6 +154,61 @@ export const useStore = create<AppState>()(
           issueLabels: [],
           additionalLogs: '',
         }),
+
+      // Phase 2 & 3 Actions
+      addScreenshot: (screenshot) =>
+        set((state) => ({
+          screenshots: [...state.screenshots, screenshot],
+        })),
+
+      removeScreenshot: (id) =>
+        set((state) => ({
+          screenshots: state.screenshots.filter(s => s.id !== id),
+        })),
+
+      clearScreenshots: () =>
+        set({ screenshots: [] }),
+
+      setSessionRecording: (recording) =>
+        set({ sessionRecording: recording }),
+
+      setIsRecording: (recording) =>
+        set({ isRecording: recording }),
+
+      setCapturedStates: (states) =>
+        set({ capturedStates: states }),
+
+      setCapturedStorage: (storage) =>
+        set({ capturedStorage: storage }),
+
+      addWebSocketMessage: (message) =>
+        set((state) => {
+          const messages = [...state.webSocketMessages, message];
+          // Keep only last 100 messages
+          return { webSocketMessages: messages.slice(-100) };
+        }),
+
+      clearWebSocketMessages: () =>
+        set({ webSocketMessages: [] }),
+
+      setIssueTemplates: (templates) =>
+        set({ issueTemplates: templates }),
+
+      setDuplicateMatches: (matches) =>
+        set({ duplicateMatches: matches }),
+
+      setSelectedAssignees: (assignees) =>
+        set({ selectedAssignees: assignees }),
+
+      setSelectedTeamMembers: (members) =>
+        set({ selectedTeamMembers: members }),
+
+      // Speech-to-Text Actions (New Feature)
+      setSpeechTranscript: (transcript: string) =>
+        set({ speechTranscript: transcript }),
+
+      setIsSpeechListening: (listening: boolean) =>
+        set({ isSpeechListening: listening }),
     }),
     {
       name: 'github-issue-creator-store',
@@ -114,6 +219,8 @@ export const useStore = create<AppState>()(
         selectedRepo: state.selectedRepo,
         additionalLogs: state.additionalLogs,
         settings: state.settings,
+        issueTemplates: state.issueTemplates,
+        selectedAssignees: state.selectedAssignees,
       }),
     }
   )

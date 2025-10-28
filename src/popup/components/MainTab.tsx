@@ -3,6 +3,7 @@ import { useStore } from '../../store/useStore';
 import { GitHubAPI } from '../../utils/github';
 import { OpenAIAPI } from '../../utils/openai';
 import { storage } from '../../utils/storage';
+import { speechToText } from '../../utils/speechToText';
 import type { GitHubRepo, GitHubLabel } from '../../types';
 
 export const MainTab: React.FC = () => {
@@ -29,10 +30,15 @@ export const MainTab: React.FC = () => {
   const [repos, setRepos] = useState<GitHubRepo[]>([]);
   const [availableLabels, setAvailableLabels] = useState<GitHubLabel[]>([]);
   const [isGeneratingTitle, setIsGeneratingTitle] = useState(false);
+  const [isListening, setIsListening] = useState(false);
+  const [speechSupported, setSpeechSupported] = useState(false);
 
   useEffect(() => {
     loadRepos();
     loadSelectedRepo();
+    // Check if speech recognition is supported
+    const isSupported = speechToText.isSupported();
+    setSpeechSupported(isSupported);
   }, []);
 
   useEffect(() => {
@@ -40,6 +46,44 @@ export const MainTab: React.FC = () => {
       loadLabels();
     }
   }, [selectedRepo]);
+
+  const handleSpeechToText = async (target: 'title' | 'description') => {
+    if (!speechToText.isSupported()) {
+      setError('Speech Recognition API not supported in your browser');
+      return;
+    }
+
+    if (isListening) {
+      // Stop listening
+      const transcript = speechToText.stop();
+      setIsListening(false);
+
+      if (transcript) {
+        if (target === 'title') {
+          setIssueTitle(transcript);
+        } else {
+          setIssueBody(issueBody + (issueBody ? '\n' : '') + transcript);
+        }
+      }
+    } else {
+      // Start listening
+      try {
+        setIsListening(true);
+        setError(null);
+        
+        await speechToText.start((transcript) => {
+          if (target === 'title') {
+            setIssueTitle(transcript);
+          } else {
+            setIssueBody(transcript);
+          }
+        });
+      } catch (err) {
+        setError(`Speech to text failed: ${err}`);
+        setIsListening(false);
+      }
+    }
+  };
 
   const loadRepos = async () => {
     const token = await storage.getGitHubToken();
@@ -288,17 +332,32 @@ export const MainTab: React.FC = () => {
         <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">
           Title *
         </label>
-        <input
-          type="text"
-          value={issueTitle}
-          onChange={(e) => setIssueTitle(e.target.value)}
-          placeholder="Enter issue title..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500"
-        />
+        <div className="flex gap-2 mb-2">
+          <input
+            type="text"
+            value={issueTitle}
+            onChange={(e) => setIssueTitle(e.target.value)}
+            placeholder="Enter issue title..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500"
+          />
+          {speechSupported && (
+            <button
+              onClick={() => handleSpeechToText('title')}
+              className={`px-3 py-2 rounded-md font-medium transition ${
+                isListening
+                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+              title={isListening ? 'Stop recording' : 'Start recording'}
+            >
+              {isListening ? '⏹️ Stop' : '🎤 Record'}
+            </button>
+          )}
+        </div>
         <button
           onClick={generateTitle}
           disabled={isGeneratingTitle}
-          className="mt-2 text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
+          className="mt-1 text-xs text-blue-600 dark:text-blue-400 hover:underline disabled:opacity-50"
         >
           {isGeneratingTitle ? '⏳ Generating with AI...' : '✨ Generate with AI'}
         </button>
@@ -309,19 +368,36 @@ export const MainTab: React.FC = () => {
         <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-200">
           Description
         </label>
-        <textarea
-          value={issueBody}
-          onChange={(e) => setIssueBody(e.target.value)}
-          rows={8}
-          placeholder="Issue description (supports Markdown)..."
-          className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500"
-        />
-        <button
-          onClick={generateIssueBody}
-          className="mt-2 w-full py-2 px-4 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
-        >
-          📋 Generate from Captured Data
-        </button>
+        <div className="mb-2">
+          <textarea
+            value={issueBody}
+            onChange={(e) => setIssueBody(e.target.value)}
+            rows={8}
+            placeholder="Issue description (supports Markdown)..."
+            className="w-full px-3 py-2 border border-gray-300 rounded-md font-mono text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+        <div className="flex gap-2">
+          <button
+            onClick={generateIssueBody}
+            className="flex-1 py-2 px-4 bg-gray-100 text-gray-700 text-sm rounded-md hover:bg-gray-200 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+          >
+            📋 Generate from Captured Data
+          </button>
+          {speechSupported && (
+            <button
+              onClick={() => handleSpeechToText('description')}
+              className={`px-4 py-2 rounded-md font-medium text-sm transition ${
+                isListening
+                  ? 'bg-red-500 hover:bg-red-600 text-white'
+                  : 'bg-blue-500 hover:bg-blue-600 text-white'
+              }`}
+              title={isListening ? 'Stop recording' : 'Start recording'}
+            >
+              {isListening ? '⏹️ Stop' : '🎤 Record'}
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Additional Logs */}

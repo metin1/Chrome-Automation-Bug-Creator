@@ -4,10 +4,12 @@ import { ScreenshotCapture } from './screenshot';
 export class SessionRecorder {
   private static readonly MAX_DURATION = 30000; // 30 seconds
   private static readonly FRAME_INTERVAL = 500; // 500ms between frames
+  private static readonly AUTO_SAVE_INTERVAL = 5000; // Auto-save every 5 seconds
   private frames: Screenshot[] = [];
   private startTime: number = 0;
   private endTime: number = 0;
   private recordingInterval: ReturnType<typeof setInterval> | null = null;
+  private autoSaveInterval: ReturnType<typeof setInterval> | null = null;
   private isRecording: boolean = false;
 
   start(): void {
@@ -30,6 +32,40 @@ export class SessionRecorder {
         console.error('Failed to capture frame:', error);
       }
     }, SessionRecorder.FRAME_INTERVAL);
+
+    // Auto-save recording data to chrome.storage
+    this.autoSaveInterval = setInterval(() => {
+      this.autoSaveToStorage();
+    }, SessionRecorder.AUTO_SAVE_INTERVAL);
+  }
+
+  private async autoSaveToStorage(): Promise<void> {
+    if (!this.isRecording) return;
+
+    try {
+      const tempRecording = {
+        frames: this.frames,
+        startTime: this.startTime,
+        duration: Date.now() - this.startTime,
+      };
+      await chrome.storage.session.set({
+        'activeRecording': tempRecording,
+      });
+    } catch (error) {
+      console.error('Failed to auto-save recording:', error);
+    }
+  }
+
+  async restoreFromStorage(): Promise<void> {
+    try {
+      const data = await chrome.storage.session.get('activeRecording');
+      if (data.activeRecording) {
+        this.frames = data.activeRecording.frames || [];
+        this.startTime = data.activeRecording.startTime || Date.now();
+      }
+    } catch (error) {
+      console.error('Failed to restore recording:', error);
+    }
   }
 
   stop(): SessionRecording {
@@ -42,8 +78,18 @@ export class SessionRecorder {
       this.recordingInterval = null;
     }
 
+    if (this.autoSaveInterval) {
+      clearInterval(this.autoSaveInterval);
+      this.autoSaveInterval = null;
+    }
+
     this.endTime = Date.now();
     this.isRecording = false;
+
+    // Clear storage after stopping
+    chrome.storage.session.remove('activeRecording').catch(err =>
+      console.error('Failed to clear recording from storage:', err)
+    );
 
     const recording: SessionRecording = {
       id: `recording-${this.startTime}`,

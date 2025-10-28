@@ -221,6 +221,8 @@ export const useStore = create<AppState>()(
         settings: state.settings,
         issueTemplates: state.issueTemplates,
         selectedAssignees: state.selectedAssignees,
+        selectedConsoleLogs: state.selectedConsoleLogs,
+        selectedNetworkRequests: state.selectedNetworkRequests,
       }),
     }
   )

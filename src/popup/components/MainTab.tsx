@@ -123,10 +123,16 @@ export const MainTab: React.FC = () => {
     body += `- **Timestamp**: ${new Date(capturedData?.timestamp || 0).toLocaleString()}\n\n`;
 
     // Add ALL console logs
+    // Add SELECTED console logs only
     if (capturedData?.consoleLogs && capturedData.consoleLogs.length > 0) {
-      const errors = capturedData.consoleLogs.filter(log => log.type === 'error');
-      const warnings = capturedData.consoleLogs.filter(log => log.type === 'warn');
-      const logs = capturedData.consoleLogs.filter(log => log.type === 'log' || log.type === 'info');
+      // Filter to only SELECTED logs
+      const selectedLogs = capturedData.consoleLogs.filter(log =>
+        selectedConsoleLogs.includes(log.id)
+      );
+      
+      const errors = selectedLogs.filter(log => log.type === 'error');
+      const warnings = selectedLogs.filter(log => log.type === 'warn');
+      const logs = selectedLogs.filter(log => log.type === 'log' || log.type === 'info');
       
       if (errors.length > 0) {
         body += `## Console Errors (${errors.length})\n\n`;
@@ -164,10 +170,15 @@ export const MainTab: React.FC = () => {
       }
     }
 
-    // Add ALL network requests
+    // Add SELECTED network requests only
     if (capturedData?.networkRequests && capturedData.networkRequests.length > 0) {
-      const failedRequests = capturedData.networkRequests.filter(req => req.status >= 400);
-      const successRequests = capturedData.networkRequests.filter(req => req.status >= 200 && req.status < 300);
+      // Filter to only SELECTED requests
+      const selectedRequests = capturedData.networkRequests.filter(req =>
+        selectedNetworkRequests.includes(req.id)
+      );
+      
+      const failedRequests = selectedRequests.filter(req => req.status >= 400);
+      const successRequests = selectedRequests.filter(req => req.status >= 200 && req.status < 300);
       const pendingRequests = capturedData.networkRequests.filter(req => req.status === 0);
       
       if (failedRequests.length > 0) {

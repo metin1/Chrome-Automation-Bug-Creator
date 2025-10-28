@@ -123,22 +123,24 @@ export const App: React.FC = () => {
           </div>
         )}
 
-        {/* Tab Navigation */}
-        <div className="flex border-b border-gray-200 dark:border-gray-700">
-          {tabs.map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id)}
-              className={`flex-1 px-3 py-2 text-xs font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
-                  : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
-              }`}
-            >
-              <span className="mr-1">{tab.icon}</span>
-              {tab.label}
-            </button>
-          ))}
+        {/* Tab Navigation - Horizontally Scrollable */}
+        <div className="overflow-x-auto border-b border-gray-200 dark:border-gray-700 scrollbar-hide">
+          <div className="flex min-w-max">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap ${
+                  activeTab === tab.id
+                    ? 'text-blue-600 border-b-2 border-blue-600 dark:text-blue-400 dark:border-blue-400 bg-blue-50 dark:bg-blue-900/20'
+                    : 'text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-200'
+                }`}
+              >
+                <span className="mr-1">{tab.icon}</span>
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* Tab Content */}

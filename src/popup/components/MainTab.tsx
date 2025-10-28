@@ -24,6 +24,8 @@ export const MainTab: React.FC = () => {
     setSelectedRepo,
     additionalLogs,
     setAdditionalLogs,
+    screenshots,
+    sessionRecording,
     clearIssueData,
   } = useStore();
   
@@ -209,6 +211,24 @@ export const MainTab: React.FC = () => {
           body += `⏳ \`${req.method}\` ${req.url}\n`;
         });
       }
+    }
+
+    // Add screenshots if captured
+    if (screenshots && screenshots.length > 0) {
+      body += `## Screenshots (${screenshots.length})\n\n`;
+      screenshots.forEach((screenshot, idx) => {
+        body += `### Screenshot ${idx + 1}\n`;
+        body += `![Screenshot ${idx + 1}](data:image/png;base64,${screenshot.data.substring(0, 100)}...)\n\n`;
+      });
+    }
+
+    // Add recording information if available
+    if (sessionRecording && sessionRecording.frames && sessionRecording.frames.length > 0) {
+      body += `## Session Recording\n\n`;
+      body += `- **Duration**: ${(sessionRecording.duration / 1000).toFixed(2)}s\n`;
+      body += `- **Frames Captured**: ${sessionRecording.frames.length}\n`;
+      body += `- **Frame Interval**: 500ms\n`;
+      body += `- **Quality**: Video data available\n\n`;
     }
 
     // Add additional logs if provided - ALWAYS include this

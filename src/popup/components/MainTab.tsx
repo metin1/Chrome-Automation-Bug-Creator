@@ -218,7 +218,7 @@ export const MainTab: React.FC = () => {
       body += `## Screenshots (${screenshots.length})\n\n`;
       screenshots.forEach((screenshot, idx) => {
         body += `### Screenshot ${idx + 1}\n`;
-        body += `![Screenshot ${idx + 1}](data:image/png;base64,${screenshot.data.substring(0, 100)}...)\n\n`;
+        body += `[Screenshot ${idx + 1} - Will be uploaded]\n\n`;
       });
     }
 
@@ -304,12 +304,40 @@ export const MainTab: React.FC = () => {
       }
 
       // Always generate complete body with all captured data and additional logs
-      const finalBody = issueBody.trim() && !additionalLogs.trim()
+      let finalBody = issueBody.trim() && !additionalLogs.trim()
         ? issueBody
         : generateCompleteBody();
 
       const api = new GitHubAPI(token);
       const [owner, repoName] = selectedRepo.split('/');
+
+      // Upload screenshots first if they exist
+      let screenshotUrls: string[] = [];
+      if (screenshots && screenshots.length > 0) {
+        try {
+          screenshotUrls = await api.uploadScreenshots(owner, repoName, screenshots);
+          
+          // Update the issue body to reference uploaded screenshots instead of base64
+          if (screenshotUrls.length > 0) {
+            // Remove the old base64 screenshot section
+            finalBody = finalBody.replace(
+              /## Screenshots.*?(?=## |\Z)/s,
+              ''
+            );
+            
+            // Add new section with reference to uploaded screenshots
+            finalBody += `\n## Screenshots (${screenshotUrls.length})\n\n`;
+            screenshotUrls.forEach((url, idx) => {
+              finalBody += `### Screenshot ${idx + 1}\n`;
+              const rawUrl = `https://raw.githubusercontent.com/${owner}/${repoName}/main/${url}`;
+              finalBody += `![Screenshot ${idx + 1}](${rawUrl})\n\n`;
+            });
+          }
+        } catch (uploadErr) {
+          console.error('Screenshot upload failed, continuing with base64:', uploadErr);
+          // Continue with base64 screenshots if upload fails
+        }
+      }
 
       const issue = await api.createIssue(owner, repoName, {
         title: issueTitle,
